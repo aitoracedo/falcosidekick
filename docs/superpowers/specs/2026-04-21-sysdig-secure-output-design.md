@@ -206,42 +206,51 @@ Falcosidekick is up and listening on 0.0.0.0:2801
 
 ---
 
-## Testing with coding-agents-kit
+## Integration with coding-agents-kit
 
-The `coding-agents-kit` Falco instance sends its alerts to its own embedded HTTP server
-on port 2802 (`http://127.0.0.1:2802`). The simplest way to validate the full pipeline
-end-to-end is to use falcosidekick's built-in `/test` endpoint, which injects a
-synthetic Falco event through all enabled outputs — no Falco reconfiguration needed.
+### The fan-out problem
 
-### Quick test (synthetic event via `/test` endpoint)
+`coding-agents-kit` already uses Falco's `http_output` to send alerts to its own
+embedded plugin server on port 2802. Falco supports only one `http_output` destination,
+so naively pointing it at falcosidekick would break the enforcement/monitor verdict loop.
 
-With falcosidekick running and configured as above:
+### Solution: falcosidekick as fan-out
 
-```bash
-curl -s -X POST http://localhost:2801/test
-```
+Falcosidekick is designed exactly for this: receive one event from Falco and forward it
+to multiple outputs simultaneously. The approach is:
 
-This triggers a synthetic `Test rule` event with priority `Debug` through all enabled
-outputs, including the Sysdig Secure output. You should see the event appear in the
-Sysdig Secure UI with:
-
-- `rule`: `Test rule`
-- `labels.agent`: `claudeCode`
-
-Check falcosidekick logs for confirmation:
+1. Point Falco's `http_output` → falcosidekick (port 2801)
+2. Configure falcosidekick with the `Webhook` output pointing back to the
+   coding-agents-kit plugin server (port 2802)
+3. Configure falcosidekick with the new `SysdigSecure` output
 
 ```
-[SysdigSecure] POST OK (200)
+Falco ──► falcosidekick:2801 ──► SysdigSecure API
+                             └──► Webhook:2802 (coding-agents-kit plugin)
 ```
 
-### Full integration test (real coding-agents-kit event → falcosidekick → Sysdig Secure)
+The Webhook output sends the raw `FalcoPayload` JSON — identical to what Falco currently
+sends directly to port 2802 — so the plugin server receives exactly what it expects.
+The coding-agents-kit enforcement/monitor verdict loop continues to work normally.
 
-To route real coding-agents-kit Falco events through falcosidekick, create a user
-config override that changes the `http_output` URL to falcosidekick:
+### Configuration
 
-> **Note:** Falco supports only one `http_output`. This redirects alerts from the
-> plugin's own server (port 2802) to falcosidekick (port 2801). The coding-agents-kit
-> enforcement/monitor verdict loop will not receive alerts while this override is active.
+#### falcosidekick `config.yaml`
+
+```yaml
+sysdigsecure:
+  apitoken: "<your-sysdig-secure-api-token>"
+  customlabels:
+    agent: "claudeCode"
+  minimumpriority: "debug"
+  checkcert: true
+
+webhook:
+  address: "http://127.0.0.1:2802"
+  minimumpriority: "debug"
+```
+
+#### Falco `http_output` override
 
 Create `~/.coding-agents-kit/config/falco.http_output_override.yaml`:
 
@@ -259,9 +268,31 @@ config_files:
   - ${HOME}/.coding-agents-kit/config/falco.http_output_override.yaml
 ```
 
-Falco watches config files and will restart automatically. Now any tool call that
-triggers a Falco rule will be forwarded to falcosidekick and on to Sysdig Secure,
-with `labels.agent: claudeCode` attached to every event.
+Falco watches config files and restarts automatically when they change.
 
-To restore normal coding-agents-kit operation, remove the override file from
-`config_files` and Falco will restart automatically.
+### Quick test (synthetic event via `/test` endpoint)
+
+With falcosidekick running and configured as above, trigger a synthetic event without
+touching Falco or the coding-agents-kit at all:
+
+```bash
+curl -s -X POST http://localhost:2801/test
+```
+
+This sends a synthetic `Test rule` / `Debug` event through all enabled outputs.
+Check falcosidekick logs for:
+
+```
+[SysdigSecure] POST OK (200)
+[Webhook] POST OK (200)
+```
+
+The event appears in Sysdig Secure with:
+- `rule`: `Test rule`
+- `labels.agent`: `claudeCode`
+
+### Restoring standalone coding-agents-kit mode
+
+Remove the override file reference from `config_files` in
+`~/.coding-agents-kit/config/falco.yaml`. Falco restarts automatically and resumes
+sending directly to port 2802.
