@@ -84,6 +84,7 @@ var (
 	talonClient         *outputs.Client
 	logstashClient      *outputs.Client
 	splunkClient        *outputs.Client
+	sysdigSecureClient  *outputs.Client
 
 	statsdClient, dogstatsdClient *statsd.Client
 	config                        *types.Configuration
@@ -887,6 +888,17 @@ func init() {
 			config.Splunk.Host = ""
 		} else {
 			outputs.EnabledOutputs = append(outputs.EnabledOutputs, "Splunk")
+		}
+	}
+
+	if config.SysdigSecure.APIToken != "" {
+		var err error
+		endpointURL := strings.TrimRight(config.SysdigSecure.URL, "/") + "/api/eventsDispatcher/v2/ingest"
+		sysdigSecureClient, err = outputs.NewClient("SysdigSecure", endpointURL, config.SysdigSecure.CommonConfig, *initClientArgs)
+		if err != nil {
+			config.SysdigSecure.APIToken = ""
+		} else {
+			outputs.EnabledOutputs = append(outputs.EnabledOutputs, "SysdigSecure")
 		}
 	}
 
