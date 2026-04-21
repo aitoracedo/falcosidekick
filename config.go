@@ -267,6 +267,11 @@ var httpOutputDefaults = map[string]map[string]any{
 		"MinimumPriority": "",
 		"Token":           "",
 	},
+	"SysdigSecure": {
+		"APIToken":        "",
+		"URL":             "https://prodmon.app.sysdig.com/secure",
+		"MinimumPriority": "",
+	},
 }
 
 // Other output defaults that do not need commonHttpOutputDefaults

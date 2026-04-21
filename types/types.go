@@ -122,6 +122,7 @@ type Configuration struct {
 	Talon              TalonOutputConfig
 	Logstash           LogstashConfig
 	Splunk             SplunkOutputConfig
+	SysdigSecure       SysdigSecureOutputConfig
 }
 
 // InitClientArgs represent a client parameters for initialization
@@ -849,6 +850,15 @@ type TalonOutputConfig struct {
 	MinimumPriority string
 }
 
+// SysdigSecureOutputConfig represents parameters for Sysdig Secure
+type SysdigSecureOutputConfig struct {
+	CommonConfig    `mapstructure:",squash"`
+	APIToken        string
+	URL             string
+	CustomLabels    map[string]string
+	MinimumPriority string
+}
+
 // LogstashConfig represents config parameters for Logstash
 type LogstashConfig struct {
 	Address         string
@@ -938,6 +948,7 @@ type Statistics struct {
 	Talon             *expvar.Map
 	Logstash          *expvar.Map
 	Splunk            *expvar.Map
+	SysdigSecure      *expvar.Map
 }
 
 // PromStatistics is a struct to store prometheus metrics
