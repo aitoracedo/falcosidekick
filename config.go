@@ -269,7 +269,7 @@ var httpOutputDefaults = map[string]map[string]any{
 	},
 	"SysdigSecure": {
 		"APIToken":        "",
-		"URL":             "https://prodmon.app.sysdig.com/secure",
+		"URL":             "https://prodmon.app.sysdig.com",
 		"MinimumPriority": "",
 	},
 }

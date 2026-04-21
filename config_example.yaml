@@ -593,7 +593,7 @@ logstash:
 
 sysdigsecure:
   # apitoken: "" # Sysdig Secure API token. If not empty, Sysdig Secure output is enabled. Env var: SYSDIGSECURE_APITOKEN
-  # url: "" # Sysdig Secure base URL (default: https://prodmon.app.sysdig.com/secure)
+  # url: "" # Sysdig Secure base URL (default: https://prodmon.app.sysdig.com)
   # customlabels: # static labels added to every event (map type, must be set in config file)
   #   environment: "production"
   #   cluster: "my-cluster"
