@@ -590,3 +590,12 @@ logstash:
   # cacertfile: "" # Use this CA certificate file instead of the client certificate when using mutual TLS (default: "")
   # minimumpriority: minimum priority of event for using this output, order is emergency|alert|critical|error|warning|notice|informational|debug or "" (default: "debug")
   # tags: ["falco"] # An additional list of tags that will be added to those produced by Falco (default: [])
+
+sysdigsecure:
+  # apitoken: "" # Sysdig Secure API token. If not empty, Sysdig Secure output is enabled. Env var: SYSDIGSECURE_APITOKEN
+  # url: "" # Sysdig Secure base URL (default: https://prodmon.app.sysdig.com/secure)
+  # customlabels: # static labels added to every event (map type, must be set in config file)
+  #   environment: "production"
+  #   cluster: "my-cluster"
+  # minimumpriority: "" # minimum priority of event for using this output, order is emergency|alert|critical|error|warning|notice|informational|debug or "" (default)
+  # checkcert: true # check if ssl certificate of the output is valid (default: true)
