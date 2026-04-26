@@ -23,15 +23,11 @@ type sysdigSecureEvent struct {
 }
 
 type sysdigSecureEventCollection struct {
-	Labels map[string]string   `json:"labels"`
-	Events []sysdigSecureEvent `json:"events"`
+	Labels map[string]string    `json:"labels"`
+	Events []sysdigSecureEvent  `json:"events"`
 }
 
-type sysdigSecurePayload struct {
-	CloudsecEvent sysdigSecureEventCollection `json:"cloudsecEvent"`
-}
-
-func newSysdigSecurePayload(falcopayload types.FalcoPayload, customLabels map[string]string) sysdigSecurePayload {
+func newSysdigSecurePayload(falcopayload types.FalcoPayload, customLabels map[string]string) sysdigSecureEventCollection {
 	labels := make(map[string]string)
 	for k, v := range customLabels {
 		labels[k] = v
@@ -47,11 +43,9 @@ func newSysdigSecurePayload(falcopayload types.FalcoPayload, customLabels map[st
 		Tags:         falcopayload.Tags,
 	}
 
-	return sysdigSecurePayload{
-		CloudsecEvent: sysdigSecureEventCollection{
-			Labels: labels,
-			Events: []sysdigSecureEvent{event},
-		},
+	return sysdigSecureEventCollection{
+		Labels: labels,
+		Events: []sysdigSecureEvent{event},
 	}
 }
 
@@ -60,9 +54,21 @@ func (c *Client) SysdigSecurePost(falcopayload types.FalcoPayload) {
 	c.Stats.SysdigSecure.Add(Total, 1)
 
 	token := c.Config.SysdigSecure.APIToken
+	account := c.Config.SysdigSecure.CloudAccount
+	region := c.Config.SysdigSecure.CloudRegion
+	provider := c.Config.SysdigSecure.CloudProvider
+
 	optfn := func(req *http.Request) {
 		req.Header.Set(AuthorizationHeaderKey, Bearer+" "+token)
-		req.Header.Set("X-Sysdig-Product", "SDS")
+		if account != "" {
+			req.Header.Set("X-Sysdig-Cloud-Account", account)
+		}
+		if region != "" {
+			req.Header.Set("X-Sysdig-Cloud-Region", region)
+		}
+		if provider != "" {
+			req.Header.Set("X-Sysdig-Cloud-Provider", provider)
+		}
 	}
 
 	err := c.Post(newSysdigSecurePayload(falcopayload, c.Config.SysdigSecure.CustomLabels), optfn)

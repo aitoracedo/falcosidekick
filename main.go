@@ -85,6 +85,8 @@ var (
 	logstashClient      *outputs.Client
 	splunkClient        *outputs.Client
 	sysdigSecureClient  *outputs.Client
+	sysdigAgentClient   *outputs.SysdigAgentClient
+	bigqueryClient      *outputs.BigQueryClient
 
 	statsdClient, dogstatsdClient *statsd.Client
 	config                        *types.Configuration
@@ -891,9 +893,31 @@ func init() {
 		}
 	}
 
-	if config.SysdigSecure.APIToken != "" {
+	if config.BigQuery.ProjectID != "" {
 		var err error
-		endpointURL := strings.TrimRight(config.SysdigSecure.URL, "/") + "/api/eventsDispatcher/v2/ingest"
+		bigqueryClient, err = outputs.NewBigQueryClient(*initClientArgs)
+		if err != nil {
+			utils.Log(utils.ErrorLvl, "BigQuery", fmt.Sprintf("client init failed: %v", err))
+			config.BigQuery.ProjectID = ""
+		} else {
+			outputs.EnabledOutputs = append(outputs.EnabledOutputs, "BigQuery")
+		}
+	}
+
+	if config.SysdigSecure.AccessKey != "" {
+		var err error
+		sysdigAgentClient, err = outputs.NewSysdigAgentClient(config.SysdigSecure, *initClientArgs)
+		if err != nil {
+			utils.Log(utils.ErrorLvl, "SysdigSecure", fmt.Sprintf("agent client init failed: %v", err))
+			config.SysdigSecure.AccessKey = ""
+		} else {
+			outputs.EnabledOutputs = append(outputs.EnabledOutputs, "SysdigSecure")
+		}
+	}
+
+	if config.SysdigSecure.APIToken != "" && sysdigAgentClient == nil {
+		var err error
+		endpointURL := strings.TrimRight(config.SysdigSecure.URL, "/") + "/api/v1/eventsDispatch/ingest"
 		sysdigSecureClient, err = outputs.NewClient("SysdigSecure", endpointURL, config.SysdigSecure.CommonConfig, *initClientArgs)
 		if err != nil {
 			config.SysdigSecure.APIToken = ""

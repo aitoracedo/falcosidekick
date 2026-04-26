@@ -411,8 +411,14 @@ func forwardEvent(falcopayload types.FalcoPayload) {
 		go splunkClient.Send(falcopayload)
 	}
 
-	if config.SysdigSecure.APIToken != "" && (falcopayload.Priority >= types.Priority(config.SysdigSecure.MinimumPriority) || falcopayload.Rule == testRule) {
+	if config.SysdigSecure.AccessKey != "" && (falcopayload.Priority >= types.Priority(config.SysdigSecure.MinimumPriority) || falcopayload.Rule == testRule) {
+		go sysdigAgentClient.SysdigSecurePost(falcopayload)
+	} else if config.SysdigSecure.APIToken != "" && (falcopayload.Priority >= types.Priority(config.SysdigSecure.MinimumPriority) || falcopayload.Rule == testRule) {
 		go sysdigSecureClient.SysdigSecurePost(falcopayload)
+	}
+
+	if config.BigQuery.ProjectID != "" && (falcopayload.Priority >= types.Priority(config.BigQuery.MinimumPriority) || falcopayload.Rule == testRule) {
+		go bigqueryClient.BigQueryPost(falcopayload)
 	}
 
 	if config.NodeRed.Address != "" && (falcopayload.Priority >= types.Priority(config.NodeRed.MinimumPriority) || falcopayload.Rule == testRule) {

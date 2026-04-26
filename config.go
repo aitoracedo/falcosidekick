@@ -270,7 +270,21 @@ var httpOutputDefaults = map[string]map[string]any{
 	"SysdigSecure": {
 		"APIToken":        "",
 		"URL":             "https://prodmon.app.sysdig.com",
+		"CloudAccount":    "",
+		"CloudRegion":     "",
+		"CloudProvider":   "",
 		"MinimumPriority": "",
+		"AccessKey":       "",
+		"AgentHost":       "prodmon.app.sysdig.com:6443",
+		"PolicyID":        uint64(10000003),
+	},
+	"BigQuery": {
+		"ProjectID":          "",
+		"DatasetID":          "",
+		"TableID":            "",
+		"ServiceCredentials": "",
+		"ServiceURL":         "https://bigquery.googleapis.com",
+		"MinimumPriority":    "",
 	},
 }
 
@@ -471,7 +485,8 @@ func getConfig() *types.Configuration {
 			Logs:    types.OTLPLogs{ExtraEnvVars: make(map[string]string)},
 			Metrics: otlpmetrics.Config{ExtraEnvVars: make(map[string]string)},
 		},
-		Splunk: types.SplunkOutputConfig{CustomHeaders: make(map[string]string)},
+		Splunk:   types.SplunkOutputConfig{CustomHeaders: make(map[string]string)},
+		BigQuery: types.BigQueryOutputConfig{CustomLabels: make(map[string]string)},
 	}
 
 	configFile := kingpin.Flag("config-file", "config file").Short('c').ExistingFile()
@@ -982,6 +997,7 @@ func getConfig() *types.Configuration {
 	c.Talon.MinimumPriority = checkPriority(c.Talon.MinimumPriority)
 	c.Logstash.MinimumPriority = checkPriority(c.Logstash.MinimumPriority)
 	c.Splunk.MinimumPriority = checkPriority(c.Splunk.MinimumPriority)
+	c.BigQuery.MinimumPriority = checkPriority(c.BigQuery.MinimumPriority)
 
 	c.Slack.MessageFormatTemplate = getMessageFormatTemplate("Slack", c.Slack.MessageFormat)
 	c.Rocketchat.MessageFormatTemplate = getMessageFormatTemplate("Rocketchat", c.Rocketchat.MessageFormat)

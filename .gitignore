@@ -25,3 +25,6 @@ dist/
 .DS_Store
 
 config.yaml
+
+# Added by ggshield
+.cache_ggshield

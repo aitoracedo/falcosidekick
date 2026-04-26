@@ -1,0 +1,5 @@
+secret:
+  ignored_matches:
+  - match: f8236ca63a8eee231dbd40c6bf0a62734f6d297a97281e3194d8c3bbde7533cd
+    name: Bearer Token - 268e4029de82c2bcb6764acdf735d90631612c36b944d5f5ba5506e39954863c
+version: 2

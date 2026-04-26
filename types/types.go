@@ -123,6 +123,7 @@ type Configuration struct {
 	Logstash           LogstashConfig
 	Splunk             SplunkOutputConfig
 	SysdigSecure       SysdigSecureOutputConfig
+	BigQuery           BigQueryOutputConfig
 }
 
 // InitClientArgs represent a client parameters for initialization
@@ -856,7 +857,27 @@ type SysdigSecureOutputConfig struct {
 	APIToken        string
 	URL             string
 	CustomLabels    map[string]string
+	CloudAccount    string
+	CloudRegion     string
+	CloudProvider   string
 	MinimumPriority string
+	// Agent protocol fields (port 6443 native draios wire protocol).
+	// When AccessKey is set, events are sent via the agent protocol instead
+	// of the REST API, which cannot inject into the Secure Events feed.
+	AccessKey  string // Sysdig agent access key (from /api/user/me .accessKey)
+	AgentHost  string // host:port of the agent collector (default: prodmon.app.sysdig.com:6443)
+	PolicyID   uint64 // Sysdig policy ID to associate events with (default: 10000003)
+}
+
+// BigQueryOutputConfig represents parameters for the BigQuery output.
+type BigQueryOutputConfig struct {
+	ProjectID          string
+	DatasetID          string
+	TableID            string
+	ServiceCredentials string            // path to a service account JSON key file, or inline JSON content
+	ServiceURL         string            // BigQuery API base URL (default: https://bigquery.googleapis.com)
+	CustomLabels       map[string]string // extra key-value pairs added to every row
+	MinimumPriority    string
 }
 
 // LogstashConfig represents config parameters for Logstash
@@ -949,6 +970,7 @@ type Statistics struct {
 	Logstash          *expvar.Map
 	Splunk            *expvar.Map
 	SysdigSecure      *expvar.Map
+	BigQuery          *expvar.Map
 }
 
 // PromStatistics is a struct to store prometheus metrics
