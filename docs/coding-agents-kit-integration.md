@@ -4,6 +4,55 @@ This guide walks through setting up a local falcosidekick instance built from th
 repository and connecting it to a running coding-agents-kit installation so that Falco events
 are forwarded to both a Sysdig Secure environment and a BigQuery table.
 
+## Architecture overview
+
+```mermaid
+flowchart TD
+    Dev(["👩‍💻 Developer"])
+
+    subgraph CC["Claude Code"]
+        Tools["Tool calls\n(Read · Bash · Write · Glob …)"]
+    end
+
+    subgraph CAK["coding-agents-kit"]
+        Plugin["Falco plugin\ninterceptor"]
+        Rules["Falco rules engine"]
+        Broker["Broker socket\nport 2802"]
+    end
+
+    subgraph FSK["falcosidekick  •  port 2801"]
+        Router["Event router"]
+        SS["SysdigSecure\noutput"]
+        BQ["BigQuery\noutput"]
+    end
+
+    SysdigUI(["☁️ Sysdig Secure\nEvents feed"])
+    GCPBQ(["☁️ GCP BigQuery\nfalco_events.events"])
+
+    Dev -->|"prompts + tool calls"| Tools
+    Tools -->|"syscall / tool events"| Plugin
+    Plugin --> Rules
+
+    Rules -->|"deny verdict\n(synchronous)"| Broker
+    Rules -->|"non-blocking match\nprogram_output curl"| Router
+
+    Router --> SS
+    Router --> BQ
+
+    SS -->|"REST API\nPOST /api/v1/events/ingest"| SysdigUI
+    BQ -->|"tabledata.insertAll"| GCPBQ
+
+    style CC fill:#1a1a2e,color:#e0e0ff,stroke:#4444aa
+    style CAK fill:#0d2137,color:#e0f0ff,stroke:#2266aa
+    style FSK fill:#0d2d1a,color:#e0ffe0,stroke:#228844
+    style SysdigUI fill:#1a1a1a,color:#ffffff,stroke:#555
+    style GCPBQ fill:#1a1a1a,color:#ffffff,stroke:#555
+```
+
+> **Key behaviour**: deny-rule verdicts are delivered synchronously on port 2802 and close
+> the event cycle before `program_output` fires — only non-blocking rules (NOTICE / INFO /
+> DEBUG priority) reliably reach falcosidekick and are forwarded downstream.
+
 ## Table of contents
 
 - [Prerequisites](#prerequisites)
