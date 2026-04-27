@@ -39,7 +39,7 @@ flowchart TD
     Router --> SS
     Router --> BQ
 
-    SS -->|"REST API\nPOST /api/v1/events/ingest"| SysdigUI
+    SS -->|"REST API\nPOST /api/v1/eventsDispatch/ingest"| SysdigUI
     BQ -->|"tabledata.insertAll"| GCPBQ
 
     style CC fill:#1a1a2e,color:#e0e0ff,stroke:#4444aa
