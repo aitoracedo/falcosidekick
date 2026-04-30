@@ -861,12 +861,6 @@ type SysdigSecureOutputConfig struct {
 	CloudRegion     string
 	CloudProvider   string
 	MinimumPriority string
-	// Agent protocol fields (port 6443 native draios wire protocol).
-	// When AccessKey is set, events are sent via the agent protocol instead
-	// of the REST API, which cannot inject into the Secure Events feed.
-	AccessKey  string // Sysdig agent access key (from /api/user/me .accessKey)
-	AgentHost  string // host:port of the agent collector (default: prodmon.app.sysdig.com:6443)
-	PolicyID   uint64 // Sysdig policy ID to associate events with (default: 10000003)
 }
 
 // BigQueryOutputConfig represents parameters for the BigQuery output.

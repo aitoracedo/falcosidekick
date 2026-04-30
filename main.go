@@ -85,7 +85,6 @@ var (
 	logstashClient      *outputs.Client
 	splunkClient        *outputs.Client
 	sysdigSecureClient  *outputs.Client
-	sysdigAgentClient   *outputs.SysdigAgentClient
 	bigqueryClient      *outputs.BigQueryClient
 
 	statsdClient, dogstatsdClient *statsd.Client
@@ -904,18 +903,7 @@ func init() {
 		}
 	}
 
-	if config.SysdigSecure.AccessKey != "" {
-		var err error
-		sysdigAgentClient, err = outputs.NewSysdigAgentClient(config.SysdigSecure, *initClientArgs)
-		if err != nil {
-			utils.Log(utils.ErrorLvl, "SysdigSecure", fmt.Sprintf("agent client init failed: %v", err))
-			config.SysdigSecure.AccessKey = ""
-		} else {
-			outputs.EnabledOutputs = append(outputs.EnabledOutputs, "SysdigSecure")
-		}
-	}
-
-	if config.SysdigSecure.APIToken != "" && sysdigAgentClient == nil {
+	if config.SysdigSecure.APIToken != "" {
 		var err error
 		endpointURL := strings.TrimRight(config.SysdigSecure.URL, "/") + "/api/v1/eventsDispatch/ingest"
 		sysdigSecureClient, err = outputs.NewClient("SysdigSecure", endpointURL, config.SysdigSecure.CommonConfig, *initClientArgs)
