@@ -105,6 +105,7 @@ func loadCredentials(s string) ([]byte, error) {
 
 // BigQueryPost sends a Falco event as a streaming insert row to BigQuery.
 func (c *BigQueryClient) BigQueryPost(falcopayload types.FalcoPayload) {
+	defer utils.TimeTrack(time.Now())
 	c.stats.BigQuery.Add(Total, 1)
 
 	outputFieldsJSON, err := json.Marshal(falcopayload.OutputFields)

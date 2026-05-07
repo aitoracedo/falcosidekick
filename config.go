@@ -274,9 +274,6 @@ var httpOutputDefaults = map[string]map[string]any{
 		"CloudRegion":     "",
 		"CloudProvider":   "",
 		"MinimumPriority": "",
-		"AccessKey":       "",
-		"AgentHost":       "prodmon.app.sysdig.com:6443",
-		"PolicyID":        uint64(10000003),
 	},
 	"BigQuery": {
 		"ProjectID":          "",
@@ -503,6 +500,7 @@ func getConfig() *types.Configuration {
 	v.SetDefault("ListenAddress", "")
 	v.SetDefault("ListenPort", 2801)
 	v.SetDefault("Debug", false)
+	v.SetDefault("TimeTracks", false)
 	v.SetDefault("BracketReplacer", "")
 	v.SetDefault("MutualTlsFilesPath", "/etc/certs")
 	v.SetDefault("MutualTLSClient.CertFile", "")

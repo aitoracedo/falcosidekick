@@ -2,7 +2,12 @@
 
 package utils
 
-import "log"
+import (
+	"fmt"
+	"log"
+	"runtime"
+	"time"
+)
 
 const (
 	InfoLvl       string = "info"
@@ -16,6 +21,30 @@ const (
 	FatalLvl      string = "fatal"
 	FatalPrefix   string = "[FATAL]"
 )
+
+// EnableTimeTracks controls whether TimeTrack prints timing output.
+// Set this to true at startup when the TimeTracks config option is enabled.
+var EnableTimeTracks bool
+
+// TimeTrack prints the elapsed time since start together with the name of the
+// calling function. It is a no-op unless EnableTimeTracks is true.
+// Use it with defer to time any function automatically:
+//
+//	func MyFunc() {
+//	    defer utils.TimeTrack(time.Now())
+//	    // ...
+//	}
+func TimeTrack(start time.Time) {
+	if !EnableTimeTracks {
+		return
+	}
+	pc, _, _, ok := runtime.Caller(1)
+	name := "unknown"
+	if ok {
+		name = runtime.FuncForPC(pc).Name()
+	}
+	fmt.Printf("[TIMER] %s took %s\n", name, time.Since(start))
+}
 
 func Log(level, output, msg string) {
 	var prefix string

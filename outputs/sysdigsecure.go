@@ -3,25 +3,33 @@
 package outputs
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
 	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/falcosecurity/falcosidekick/internal/pkg/utils"
 	"github.com/falcosecurity/falcosidekick/types"
 )
 
+// sysdigSecureEvent mirrors the FalcoEvent struct expected by the Sysdig
+// Secure dispatcher handler at POST /api/v1/eventsDispatch/ingest.
+// See: secure-backend/events/cmd/dispatcher/handler.go
 type sysdigSecureEvent struct {
-	Timestamp    time.Time              `json:"timestamp"`
-	Rule         string                 `json:"rule"`
-	Priority     string                 `json:"priority"`
-	Output       string                 `json:"output"`
-	OutputFields map[string]interface{} `json:"output_fields"`
-	Source       string                 `json:"source,omitempty"`
-	Tags         []string               `json:"tags,omitempty"`
+	UUID         string            `json:"uuid"`
+	Time         string            `json:"time"`
+	Rule         string            `json:"rule"`
+	Priority     string            `json:"priority"`
+	Output       string            `json:"output"`
+	Source       string            `json:"source,omitempty"`
+	Tags         []string          `json:"tags,omitempty"`
+	OutputFields map[string]string `json:"output_fields"`
 }
 
+// sysdigSecureEventCollection mirrors the FalcoEventsBatch struct expected
+// by the Sysdig Secure dispatcher handler.
 type sysdigSecureEventCollection struct {
 	Labels map[string]string    `json:"labels"`
 	Events []sysdigSecureEvent  `json:"events"`
@@ -33,12 +41,25 @@ func newSysdigSecurePayload(falcopayload types.FalcoPayload, customLabels map[st
 		labels[k] = v
 	}
 
+	// Convert OutputFields from map[string]interface{} to map[string]string
+	// to match the backend ExternalPolicyEvent.Fields proto (map<string,string>).
+	fields := make(map[string]string, len(falcopayload.OutputFields))
+	for k, v := range falcopayload.OutputFields {
+		switch val := v.(type) {
+		case string:
+			fields[k] = val
+		default:
+			fields[k] = fmt.Sprintf("%v", val)
+		}
+	}
+
 	event := sysdigSecureEvent{
-		Timestamp:    falcopayload.Time,
+		UUID:         uuid.New().String(),
+		Time:         falcopayload.Time.UTC().Format(time.RFC3339Nano),
 		Rule:         falcopayload.Rule,
 		Priority:     falcopayload.Priority.String(),
 		Output:       falcopayload.Output,
-		OutputFields: falcopayload.OutputFields,
+		OutputFields: fields,
 		Source:       falcopayload.Source,
 		Tags:         falcopayload.Tags,
 	}
@@ -51,6 +72,7 @@ func newSysdigSecurePayload(falcopayload types.FalcoPayload, customLabels map[st
 
 // SysdigSecurePost posts a Falco event to the Sysdig Secure Events API
 func (c *Client) SysdigSecurePost(falcopayload types.FalcoPayload) {
+	defer utils.TimeTrack(time.Now())
 	c.Stats.SysdigSecure.Add(Total, 1)
 
 	token := c.Config.SysdigSecure.APIToken

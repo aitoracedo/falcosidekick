@@ -117,6 +117,7 @@ func init() {
 	regOutputFormat, _ = regexp.Compile(`(?i)[0-9:]+\.[0-9]+: (Debug|Informational|Notice|Warning|Error|Critical|Alert|Emergency) .*`)
 
 	config = getConfig()
+	utils.EnableTimeTracks = config.TimeTracks
 	stats = getInitStats()
 	promStats = getInitPromStats(config)
 	otlpMetrics = newOTLPMetrics(config)

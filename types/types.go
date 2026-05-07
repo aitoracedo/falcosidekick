@@ -57,6 +57,7 @@ type Configuration struct {
 	TLSClient          TLSClient
 	TLSServer          TLSServer
 	Debug              bool
+	TimeTracks         bool
 	ListenAddress      string
 	ListenPort         int
 	BracketReplacer    string
